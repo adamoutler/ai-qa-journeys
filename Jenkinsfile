@@ -29,7 +29,7 @@ pipeline {
                         
                         // 3. Spin up the container
                         timeout(time: 15, unit: 'MINUTES') {
-                            sh 'docker compose up --build --abort-on-container-exit'
+                            sh 'docker compose up --abort-on-container-exit'
                         }
                     }
                 }
