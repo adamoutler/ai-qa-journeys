@@ -31,19 +31,19 @@ pipeline {
                         // 2. CD into the target project, pick 2 random journeys
                         // Security: Only copy the selected journeys to a temp folder for the container
                         sh """
-                        rm -rf ${rootDir}/container_journeys ${rootDir}/.gemini_project
-                        mkdir -p ${rootDir}/container_journeys ${rootDir}/.gemini_project
+                        rm -rf "${rootDir}/container_journeys" "${rootDir}/.gemini_project"
+                        mkdir -p "${rootDir}/container_journeys" "${rootDir}/.gemini_project"
                         
-                        cd ${params.TARGET_PROJECT}
-                        find user-journies -name '*.md' | shuf -n 2 > ${rootDir}/selected-journeys-temp.txt
+                        cd "${params.TARGET_PROJECT}"
+                        find user-journies -name '*.md' | shuf -n 2 > "${rootDir}/selected-journeys-temp.txt"
                         
                         while read journey; do
-                            cp "\$journey" ${rootDir}/container_journeys/
-                            basename "\$journey" >> ${rootDir}/selected-journeys.txt
-                        done < ${rootDir}/selected-journeys-temp.txt
+                            cp "\$journey" "${rootDir}/container_journeys/"
+                            basename "\$journey" >> "${rootDir}/selected-journeys.txt"
+                        done < "${rootDir}/selected-journeys-temp.txt"
                         
-                        cp .gemini/settings.json ${rootDir}/.gemini_project/
-                        rm ${rootDir}/selected-journeys-temp.txt
+                        cp .gemini/settings.json "${rootDir}/.gemini_project/"
+                        rm "${rootDir}/selected-journeys-temp.txt"
                         """
                         
                         // 3. Spin up the container
