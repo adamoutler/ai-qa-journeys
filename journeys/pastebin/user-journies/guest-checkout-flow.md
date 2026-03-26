@@ -16,7 +16,7 @@ environmental_variables:
 Your task is to act as a user and verify the following:
 
 - "Navigate to $BASE_URL"
-- "Enter \"${RANDOM_TEXT} into main window where prompt text \"Paste here\" exists."
+- "Enter \"${RANDOM_TEXT}\" into main window where prompt text \"Paste here\" exists."
 - "Press the save button."
 - "Copy the URL at the top of the page after save."
 - "Open the URL in a new tab."
