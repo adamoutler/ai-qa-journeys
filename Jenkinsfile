@@ -1,8 +1,8 @@
 pipeline {
     agent any
     parameters {
-        // Allows you to dynamically select the project folder, defaulting to project1
-        string(name: 'TARGET_PROJECT', defaultValue: 'pastebin', description: 'Which project folder to test')
+        // Allows you to dynamically select the project folder, defaulting to journeys/pastebin
+        string(name: 'TARGET_PROJECT', defaultValue: 'journeys/pastebin', description: 'Which project folder to test')
         string(name: 'PROJECT_FROM_JENKINS', defaultValue: 'pastebin', description: 'Plane Workspace Slug')
     }
     triggers {
