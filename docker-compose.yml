@@ -1,0 +1,14 @@
+# docker-compose.yml
+services:
+  qa-container:
+    build: .
+    env_file:
+      - .env
+    volumes: 
+      - ~/.gemini:/root/.gemini:rw
+      - /etc/localtime:/etc/localtime:ro
+      - ./persona.md:/app/persona.md:ro
+      - ./selected-journeys.txt:/app/selected-journeys.txt:ro
+      
+      # DYNAMIC MOUNT: Mounts whichever project Jenkins selected to /app/project
+      - ./${TARGET_PROJECT}:/app/project:rw

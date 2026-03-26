@@ -1,0 +1,10 @@
+# Jenkins / Docker simulation and runtime files
+.env
+selected-journeys.txt
+simulate_jenkins.sh
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
