@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'inferrence1' }
     parameters {
         // Allows you to dynamically select the project folder, defaulting to journeys/pastebin
         string(name: 'TARGET_PROJECT', defaultValue: 'journeys/pastebin', description: 'Which project folder to test')
