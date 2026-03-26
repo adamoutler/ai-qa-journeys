@@ -3,11 +3,11 @@ import os
 import sys
 import yaml
 import subprocess
+import re
 
-def execute_journey(relative_filepath):
-    # relative_filepath looks like "user-journies/create-paste.md"
-    # Resolve it against our generic Docker mount
-    container_filepath = os.path.join("/app/project", relative_filepath)
+def execute_journey(filename):
+    # Security: Read journeys from the restricted /app/journeys mount
+    container_filepath = os.path.join("/app/journeys", filename)
 
     if not os.path.exists(container_filepath):
         print(f"Error: Journey file not found: {container_filepath}")
@@ -32,9 +32,10 @@ def execute_journey(relative_filepath):
         subprocess.run(["pip", "install"] + metadata['python_dependencies'], check=True)
     
     for cmd in metadata.get('setup_commands', []):
-        subprocess.run(cmd, shell=True, check=True)
+        expanded_cmd = os.path.expandvars(str(cmd))
+        subprocess.run(expanded_cmd, shell=True, check=True)
 
-    # 3. Export Journey-Specific Env Vars (Expands ${RANDOM_TEXT})
+    # 3. Export Journey-Specific Env Vars
     for key, val in metadata.get("environmental_variables", {}).items():
         os.environ[key] = os.path.expandvars(str(val))
 
@@ -42,15 +43,17 @@ def execute_journey(relative_filepath):
     with open("/app/persona.md", "r") as f:
         persona = f.read()
 
-    sys_instruct = f"{persona}\n\nConstraints: {metadata.get('limitations')}"
+    purpose = metadata.get('purpose', 'Not specified')
+    constraints = metadata.get('limitations', 'No specific constraints')
+
+    sys_instruct = f"{persona}\n\nPURPOSE OF THIS JOURNEY:\n{purpose}\n\nCONSTRAINTS:\n{constraints}"
     prompt = f"System Instruction:\n{sys_instruct}\n\nTask:\n{markdown_body}"
 
-    print(f"Executing: {metadata.get('name', relative_filepath)}")
+    print(f"Executing Journey: {metadata.get('name', filename)}")
     
     # 5. Execute Gemini CLI with the prompt in the project directory
     try:
         # Run the gemini CLI command in headless (-p) and YOLO (-y) mode
-        # We capture output to check for QA FAILED string
         result = subprocess.run(
             ["gemini", "-y", "-p", prompt], 
             cwd="/app/project",
@@ -63,16 +66,34 @@ def execute_journey(relative_filepath):
         if result.stderr:
             print(result.stderr, file=sys.stderr)
 
-        if "QA FAILED" in result.stdout:
-            print(f"Journey Result: FAILED (detected 'QA FAILED' in output)")
-            return False
-        
-        if result.returncode != 0:
-            print(f"Journey Result: FAILED (gemini CLI exited with code {result.returncode})")
-            return False
+        # 6. Validation Phase
+        journey_success = True
 
-        print("Journey Result: PASSED")
-        return True
+        # Check for mandatory failure string from persona
+        if "QA FAILED" in result.stdout:
+            print(f"Result: FAILED (detected 'QA FAILED' in agent output)")
+            journey_success = False
+        
+        # Check for exit code
+        if result.returncode != 0:
+            print(f"Result: FAILED (gemini CLI exited with code {result.returncode})")
+            journey_success = False
+
+        # Metadata-based validation assertions (Resolve environment variables first)
+        assertions = metadata.get('assertions', [])
+        if isinstance(assertions, str):
+            assertions = [assertions]
+        
+        for raw_pattern in assertions:
+            pattern = os.path.expandvars(str(raw_pattern))
+            if not re.search(pattern, result.stdout):
+                print(f"Result: FAILED (Assertion failed: pattern '{pattern}' not found in output)")
+                journey_success = False
+
+        if journey_success:
+            print("Result: PASSED")
+        
+        return journey_success
 
     except Exception as e:
         print(f"Journey execution encountered a critical error: {e}")
@@ -94,8 +115,8 @@ if __name__ == "__main__":
                 any_failed = True
     
     if any_failed:
-        print("\nOverall Result: FAIL")
+        print("\nOverall Results: FAIL")
         sys.exit(1)
     else:
-        print("\nOverall Result: PASS")
+        print("\nOverall Results: PASS")
         sys.exit(0)

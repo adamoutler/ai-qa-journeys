@@ -6,6 +6,7 @@ on:
     paths:
       - 'Dockerfile'
       - 'requirements.txt'
+      - 'runner.py'
   workflow_dispatch:
 
 env:

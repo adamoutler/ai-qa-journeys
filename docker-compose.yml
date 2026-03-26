@@ -9,6 +9,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./persona.md:/app/persona.md:ro
       - ./selected-journeys.txt:/app/selected-journeys.txt:ro
+      - ./runner.py:/app/runner.py:ro
       
-      # DYNAMIC MOUNT: Mounts whichever project Jenkins selected to /app/project
-      - ./${TARGET_PROJECT}:/app/project:rw
+      # Security: Mount only the selected journeys and settings
+      - ./container_journeys:/app/journeys:ro
+      - ./.gemini_project:/app/project/.gemini:ro
+    tmpfs:
+      - /app/project:rw,mode=777
